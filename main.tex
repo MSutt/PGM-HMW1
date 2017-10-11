@@ -1,0 +1,126 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Homework 1 PGM}
+\author{Sharone Dayan, Michael Sutton }
+\date{October 2017}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{dsfont}
+\usepackage{stmaryrd}
+\usepackage{amsfonts}
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{geometry}
+\usepackage{color}
+\geometry{hmargin=2.5cm,vmargin=2.5cm}
+\setlength{\parindent}{0cm}
+\begin{document}
+
+\maketitle
+
+\section{Learning in Discrete Graphical Model}
+
+Considérons le modèle suivant: \\
+Soit $Z$ et $X$ deux variables discrètes qui prennent respectivement $M$ et $K$ valeurs tel que :
+\begin{align*} 
+p(Z=m)&=\pi_m  \qquad \forall m \in \llbracket 1,\ldots,M \rrbracket\\
+p(X=k|Z=m)&=\theta_{mk} \qquad \forall k \in \llbracket 1,\ldots,K \rrbracket, \forall m\in \llbracket 1,\ldots,M \rrbracket
+\end{align*}
+\\
+\textbf{Données} : On a un echantillon  $(z^{(1)},x^{(1)}),\ldots,(z^{(N)},x^{(N)})$ d'observations i.i.d du couple $(Z,X)$.\\
+
+%\subsection{Calcul de l'estimateur du maximum de vraissemblance}
+Posons Y = $(Y_1,\ldots,Y_M)$ avec $Y_m = \mathds{1}_{Z=m}$.
+Posons $B = \begin{pmatrix}
+B_1\\
+\vdots\\
+B_M
+\end{pmatrix}
+$ avec $(B_m)_k = \mathds{1}_{X=k|Z=m}$, on a alors :\\
+\begin{align*}
+p(Y_m = m) &= p(Z=m) = \pi_{m} \qquad \forall m \in \llbracket 1,\ldots,M \rrbracket \\
+p(Y = y) &= \prod_{m=1}^{M}\pi_m^{y_m}\\
+\intertext{
+L'évènement \textcolor{red}{${\{Y=k\}}$} correspond à ${\{Y_k=1 \  et \ Y_l=0  \ \ \forall l\neq k \}}$, $Y \in [0,1]^K$
+.\\
+Et concernant $B$ et $Z$ on a les relations:
+}
+p(B_{mk} = 1) &= p((B_m)_k = 1) = p(X=k|Z=m) = \theta_{mk} \qquad \forall k \in \llbracket 1,\ldots,K \rrbracket, \forall m\in \llbracket 1,\ldots,M \rrbracket\\
+p(B=b) &= \prod_{m=1}^{M}\prod_{k=1}^{K}\theta_{mk}^{\:b_{mk}}
+\intertext{\textcolor{red}{mettre un texte comme pour Y decrivant B\\
+}
+Ecrivons la fonction de vraisemblance :}
+L((\pi,\theta)) &=p_{(\pi,\theta)}((Z^{(1)},X^{(1)})=(z^{(1)},x^{(1)}),\ldots,(Z^{(N)},X^{(N)})=(z^{(N)},x^{(N)}))\\
+&= \prod_{n=1}^{N} p_{(\pi\theta)}((Z^{(n)},X^{(n)})=(z^{(n)},x^{(n)})) \qquad \text{par independance}\\
+&= \prod_{n=1}^{N}p(X^{(n)}=x^{(n)}|Z^{(n)}=z^{(n)})\:p(Z^{(n)}=z^{(n)})\\
+&=\prod_{n=1}^{N}p(B^{(n)}=b^{(n)})\: p(Y^{(n)}=y^{(n)})\\
+&=\prod_{n=1}^{N} \prod_{m=1}^{M}\prod_{k=1}^{K}\theta_{mk}^{\:b_{mk}^{(n)}}\prod_{m=1\prime}^{M}\pi_{m\prime}^{y_{m\prime}^{(n)}}\\
+&=\prod_{n=1}^{N} \prod_{m=1}^{M}\prod_{k=1}^{K}\theta_{mk}^{\:b_{mk}^{(n)}}\pi_{m}^{y_m^{(n)}}\\
+\end{align*}
+
+En remarquant que les cas ou $\pi_i=0$ (resp. $\theta_{mk} = 0$)  entrainerai que $y_i = 0$ sur toute les obesrvation (resp. $B_{mk}=0$ sur toute les obervations), les valeurs correspondantes dans le produit valent 1 et "disparaissent". On en conclu donc que la log vraissemblance est bien defini et vaut:
+\begin{align*}
+l((\pi,\theta)) &= \sum_{n=1}^{N}\sum_{k=1}^{K}\sum_{m=1}^{M}b_{mk}^{(n)}\log(\theta_{mk})+{y_m^{(n)}}\log(\pi_m)\\
+&= \sum_{m=1}^{M}\sum_{k=1}^{K}\sum_{n=1}^{N}b_{mk}^{(n)}\log(\theta_{mk})+{y_m^{(n)}}\log(\pi_m)
+\end{align*}
+En notant $n_m = \sum_{n=1}^{N}{y_m^{(n)}}$, qui correspond au nombre d'observations de Z prenant la valeur $j$, et en notant $n_{mk}= \sum_{n=1}^{N}b_{mk}^{(n)}$ qui correspond au nombre d'observations de $(Z,X)$ prenant la valeur $(m,k)$ on a : \\
+\begin{align*}
+l((\pi,\theta)) = \sum_{m=1}^{M}\sum_{k=1}^{K}n_{mk}\log(\theta_{mk})+n_m\log(\pi_m)\\
+\end{align*}
+
+L'objectif est donc de maximiser la fonction de log vraisemblance $l((\pi,\theta))$ sous les contrainte que $\sum_{m=1}^{M}{\pi_m}~=~1$ et $\forall m \  \sum_{k=1}^{K}{\theta_{mk}}=1 $, ou en d'autres termes:
+\begin{align*}
+\min_{\substack{\pi_m\geq0\\\theta_{mk}\geq0}}\;f((\pi,\theta))=-l((\pi,\theta))=\sum_{m=1}^{M}\sum_{k=1}^{K}-\,n_{mk}\log(\theta_{mk})-n_m\log(\pi_m) \qquad s.c \ \ \ 1^T\pi=1 \in \mathbb{R} \ \ and \ \ 1^T\theta=1\in \mathbb{R}^M
+\end{align*}
+Le Lagrangien de ce problème donne:
+\begin{align*}
+\mathcal{L}(\pi,\theta,\lambda)= -l((\pi,\theta))+ \lambda_0 (\sum_{m=1}^{M}{\pi_m}-1) + \sum_{m=1}^{M}(\lambda_j(\sum_{k=1}^{K}{\theta_{mk}}-1))
+\end{align*}
+
+Il est évident que $n_i \geq 0$ car $y_i \geq 0$ donc f est convexe comme somme de fonction convexe. De plus l'ensemble $\{\pi_m\geq0 ,\theta_{mk}\geq0 \ , \forall m \in \llbracket 1,\ldots,M \ \forall k \in \llbracket 1,\ldots,K \rrbracket\}$ est convexe, il s'agit d'un problème d'optimisation convexe. Les contraintes son linéaires, et \textcolor{red}{il existe $\pi_1,\pi_2,...,\pi_M  \ \ tq \ \ \sum_{i=1}^{M}{\pi_i}=1$}, donc d'après la qualification de contraintes de Slater, le problème a la propriété de forte dualité. Ainsi :
+\begin{align*}
+\min_{\substack{\pi_m\geq0\\\theta_{mk}\geq0}}\;f((\pi,\theta))=\max_\lambda \min_{\substack{\pi_m\geq0\\\theta_{mk}\geq0}} \mathcal{L}(\pi,\theta,\lambda)
+\end{align*}
+\textcolor{red}{Je suis pas sur que c'est phrase soit la bonne justification}Comme $L(\pi,\lambda)$ est convexe par rapport à $\pi$, le minimum se trouve en annulant la dérivée de $L(\pi,\lambda)$ par rapport à $\pi$.
+\\Ainsi, on obtient:
+\begin{align*}
+\frac{\partial \mathcal{L}}{\partial \pi_i} = -\frac{K\,n_i}{\pi_i}+\lambda=0 \qquad \forall i\in \llbracket 1,\ldots,M \rrbracket 
+\end{align*}
+Donc:
+\begin{align*} 
+\pi_i\lambda=Kn_i \qquad \forall i\in \llbracket 1,\ldots,M \rrbracket 
+\end{align*}
+En substituant cette égalité à la contrainte $\sum_{i=1}^{M}{\pi_i}=1$, on obtient $\lambda= K\sum_{i=1}^{M}{n_i}$, d'où $\lambda=kN~(~\neq~0~)$ avec N le nombre d'observations.
+\\On obtient finalement : 
+\begin{align*} 
+\widehat{\pi_i}=\frac{Kn_i}{\lambda} 
+=\frac{\sum_{j=1}^{n}{y_i^{(j)}}}{n}
+=\frac{n_i}{n}
+\qquad \forall i\in \llbracket 1,\ldots,M \rrbracket 
+\end{align*}
+%%%%%%% JE ME SUIS ARRETER LA IL FAUT FAIRE LA DERIVé AVEC THETA MK
+
+
+% les etapes de la demo qu'ils restent c'est 
+% 1 enoncer ce qu'on chercher le max avec la condition som des pi_i = 1
+% 2 justifier que le max existe, je sais pas si ici on peu juste dire que la fonction est continue sur lespace defini par la somme des pi_i = 1 qui est ferme borne donc compact donc elle atteint son max
+% 3 Ecrire Faire le lagrangien
+% 4 le deriver 
+% 5 trouver que le max de vraissemblance c'est 1/n somme des y_i^j
+%OK je m'occupe de la fin de la démo du 1er
+
+
+
+\vspace{5cm}
+
+Nous cherchons donc à trouver :
+\[
+\widehat{\pi}_{ML}=argmax\limits_{\pi_m}{L(z_1,...,z_M;\pi_m)}
+\]
+
+\end{document}
